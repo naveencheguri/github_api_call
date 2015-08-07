@@ -1,0 +1,76 @@
+<!doctype html>
+
+<head>
+<link rel="icon" type="image/x-icon" href="https://assets-cdn.github.com/favicon.ico">
+  <link rel="stylesheet" type="text/css" media="all" href="css/styles.css">
+  <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+</head>
+
+<body>
+  <div id="container">
+    <h1>ui-challenge-4</h1>
+    <p>Enter Github username below and click submit to view Github profile of user</p>
+    <input type="text" id="username" placeholder="Enter Github username">
+    <a href="#" id="submit_button">Submit</a>
+    <div id="result" class="clearfix"></div>
+  </div>
+<script type="text/javascript">
+$(function(){
+  $('#submit_button').on('click', function(e){
+    
+    $('#result').html('<div id="loader"><img src="css/loader.gif" alt="loading..."></div>');
+    
+    var username = $('#username').val();
+    var requri   = 'https://api.github.com/users/'+username;
+    var repouri  = 'https://api.github.com/users/'+username+'/repos';
+    
+    requestJSON(requri, function(json) {
+      if(json.message == "Not Found" || username == '') {
+        $('#result').html("<h2>No User Info Found</h2>");
+      }
+      
+      else {
+        // else we have a user and we display their info
+        var fullname   = json.name;
+        var username   = json.login;
+        var aviurl     = json.avatar_url;
+        var profileurl = json.html_url;
+        if(fullname == undefined) { fullname = username; }
+        
+        var outhtml = '<h2>'+fullname+' <span class="smallname">(<a href="'+profileurl+'" target="_blank">'+username+'</a>)</span></h2>';
+        outhtml = outhtml + '<div><a href="'+profileurl+'" target="_blank"><img src="'+aviurl+'" width="80" height="80" alt="'+username+'"></a>';
+        outhtml = outhtml + '<div class="repolist clearfix">';
+        
+        var repositories;
+        $.getJSON(repouri, function(json){
+          repositories = json;   
+          outputPageContent();                
+        });          
+        
+        function outputPageContent() {
+          if(repositories.length == 0) { outhtml = outhtml + '<p>No repositories!</p></div>'; }
+          else {
+            outhtml = outhtml + '<p><strong>Repositories  List:</strong></p> <ul>';
+            $.each(repositories, function(index) {
+              outhtml = outhtml + '<li><a href="'+repositories[index].html_url+'" target="_blank">'+repositories[index].name + '</a></li>';
+            });
+            outhtml = outhtml + '</ul></div>'; 
+          }
+          $('#result').html(outhtml);
+        } 
+      } 
+    }); 
+  }); 
+  
+  function requestJSON(url, callback) {
+    $.ajax({
+      url: url,
+      complete: function(xhr) {
+      callback.call(null, xhr.responseJSON);
+      }
+    });
+  }
+});
+</script>
+</body>
+</html>
